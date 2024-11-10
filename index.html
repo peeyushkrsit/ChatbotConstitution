@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constitution Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #chatbot {
+            height: 500px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .message {
+            margin: 10px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #e3f2fd;
+            margin-left: 20%;
+        }
+
+        .bot-message {
+            background-color: #f5f5f5;
+            margin-right: 20%;
+        }
+
+        #user-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Constitution Chatbot</h1>
+    <div id="chatbot"></div>
+    <input type="text" id="user-input" placeholder="Ask a question about the Constitution...">
+
+    <script>
+        // Wait for page to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add initial message
+            addMessageToChat('bot', 'Hello! Ask me anything about the Constitution.');
+        });
+
+        // Handle user input
+        document.getElementById('user-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const userInput = e.target.value.trim();
+                if (!userInput) return; // Don't send empty messages
+                
+                // Show user message
+                addMessageToChat('user', userInput);
+                
+                // Show loading message
+                const loadingId = addMessageToChat('bot', 'Thinking...');
+                
+                // Send to server
+                fetch('http://localhost:3000/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ input: userInput })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Remove loading message and show response
+                    removeMessage(loadingId);
+                    addMessageToChat('bot', data.response);
+                })
+                .catch(error => {
+                    // Remove loading message and show error
+                    removeMessage(loadingId);
+                    addMessageToChat('bot', "Sorry, I'm having trouble connecting to the server.");
+                });
+
+                // Clear input
+                e.target.value = '';
+            }
+        });
+
+        // Add message to chat
+        function addMessageToChat(sender, message) {
+            const chatDiv = document.getElementById('chatbot');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageElement.textContent = message;
+            
+            // Add unique ID to message
+            const messageId = Date.now();
+            messageElement.id = `msg-${messageId}`;
+            
+            chatDiv.appendChild(messageElement);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+            
+            return messageId;
+        }
+
+        // Remove message by ID
+        function removeMessage(messageId) {
+            const message = document.getElementById(`msg-${messageId}`);
+            if (message) {
+                message.remove();
+            }
+        }
+    </script>
+    <script>
+        !function(w, d, s, ...args){
+          var div = d.createElement('div');
+          div.id = 'aichatbot';
+          d.body.appendChild(div);
+          w.chatbotConfig = args;
+          var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s);
+          j.defer = true;
+          j.type = 'module';
+          j.src = 'https://aichatbot.sendbird.com/index.js';
+          f.parentNode.insertBefore(j, f);
+        }(window, document, 'script', 'C3E7D9D9-97FE-4CBF-9244-D299BFFCC7FE', 'WrwavwnQbItiF-Y4cOi5C', {
+          apiHost: 'https://api-cf-ap-5.sendbird.com',
+        });
+        </script>
+</body>
+</html>
+
